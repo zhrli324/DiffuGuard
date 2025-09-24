@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+*.log
+*.pth
+*.pt
+*.bin
+.DS_Store
+run_jailbreakbench/attack_results/
