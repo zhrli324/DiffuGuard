@@ -84,12 +84,11 @@ def build_azure_like_client():
     """
     base_url = os.getenv(
         "SAFETY_BASE_URL",
-        "https://search-va.byteintl.net/gpt/openapi/online/multimodal/crawl/openai/deployments/gpt_openapi",
+        "",
     )
-    api_version = os.getenv("SAFETY_API_VERSION", "2024-03-01-preview")
+    api_version = os.getenv("", "")
     # ⚠️ 强烈建议用环境变量传入，不要把密钥硬编码在代码里
-#    api_key = os.getenv("SAFETY_API_KEY") or os.getenv("OPENAI_API_KEY") or "1raIezJtoNs1SHbf3yr8Z57MpJPtz5bA_GPT_AK"
-    api_key = os.getenv("SAFETY_API_KEY") or os.getenv("OPENAI_API_KEY") or "H2mgBs8XoeR6RLoJDKuRna5pZkceyVz1"
+    api_key = os.getenv("SAFETY_API_KEY") or os.getenv("OPENAI_API_KEY") or ""
     if not api_key:
         raise ValueError(
             "未发现 API Key。请设置环境变量 SAFETY_API_KEY 或 OPENAI_API_KEY。"
@@ -100,8 +99,7 @@ def build_azure_like_client():
         api_version=api_version,
         api_key=api_key,
     )
-#    model_name = os.getenv("SAFETY_MODEL_NAME", "gpt-4o-2024-11-20")
-    model_name = os.getenv("SAFETY_MODEL_NAME", "gpt-4o-mini-2024-07-18")
+    model_name = os.getenv("SAFETY_MODEL_NAME", "")
     return client, model_name
 
 

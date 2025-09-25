@@ -82,9 +82,9 @@ def build_azure_like_client():
       - SAFETY_MODEL_NAME
     若未设置，将使用示例中的默认值。
     """
-    base_url = "https://search-va.byteintl.net/gpt/openapi/online/multimodal/crawl/openai/deployments/gpt_openapi"
-    api_version = "2024-03-01-preview"
-    api_key = "H2mgBs8XoeR6RLoJDKuRna5pZkceyVz1"
+    base_url = ""
+    api_version = ""
+    api_key = ""
     if not api_key:
         raise ValueError(
             "未发现 API Key。请设置环境变量 SAFETY_API_KEY 或 OPENAI_API_KEY。"
