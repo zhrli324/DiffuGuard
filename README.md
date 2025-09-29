@@ -4,11 +4,7 @@ The official repo for our paper **DiffuGuard: How Intrinsic Safety is Lost and F
 
 ## Initial Setup
 
-Clone this repo
-
-```shell
-git clone https://github.com/niez233/DLLM_safety.git
-```
+Clone this repo.
 
 ## Analysis
 
@@ -18,4 +14,4 @@ You can refer to the `README.md` in this folder to reproduce our experiment.
 
 ## DiffuGuard
 
-We are tidying up the code to make it more readable.
+We are tidying up the code to make it more readable. Comming soon...
