@@ -19,9 +19,8 @@ import torch.nn.functional as F
 import pandas as pd
 from tqdm import tqdm
 from transformers import AutoTokenizer
-from models import MMadaModelLM  # 官方 MMaDA 类
+from models import MMadaModelLM
 
-# -------------------- Utilities --------------------
 def add_gumbel_noise(logits: torch.Tensor, temperature: float):
     """
     Gumbel-max sampling helper.
@@ -70,17 +69,11 @@ def build_pad_only_attention_bias(attention_mask: Optional[torch.Tensor],
                                   total_len: int,
                                   device,
                                   dtype=torch.float32) -> torch.Tensor:
-    """
-    构造 (B,1,T,T) 的浮点掩码，仅屏蔽 padding（左填充为 0）。
-    SDPA 语义：可见位置=0，不可见=-inf。因果性交给模型内部，不在此叠加。
-    """
     if attention_mask is None:
-        # 无 padding 信息 → 全可见
         return torch.zeros(1, 1, total_len, total_len, dtype=dtype, device=device)
 
     B, Lp = attention_mask.shape
     T = total_len
-    # full_mask: True 表示有效，False 表示 padding
     full_mask = torch.ones(B, T, dtype=torch.bool, device=device)
     full_mask[:, :Lp] = attention_mask.to(torch.bool)
 
@@ -91,10 +84,6 @@ def build_pad_only_attention_bias(attention_mask: Optional[torch.Tensor],
 
 
 def model_forward_with_bias(model, x: torch.Tensor, attention_bias: Optional[torch.Tensor]):
-    """
-    前向封装：优先带 attention_bias；如遇实现差异，自动降级。
-    返回 logits: (B, T, V)
-    """
     try:
         out = model(x, attention_bias=attention_bias)
     except TypeError:
@@ -107,7 +96,6 @@ def model_forward_with_bias(model, x: torch.Tensor, attention_bias: Optional[tor
     return out[0]
 
 
-# -------------------- Generation --------------------
 @torch.no_grad()
 def generate(
     model,
@@ -166,7 +154,6 @@ def generate(
 
             mask_index = (x == mask_id)  # (B, T)
 
-            # CFG branch（MMaDA 通常 cfg_scale=0）
             if cfg_scale > 0.0:
                 un_x = x.clone()
                 un_x[prompt_index] = mask_id
@@ -182,35 +169,29 @@ def generate(
             logits_with_noise = add_gumbel_noise(logits, temperature=temperature)
             x0 = torch.argmax(logits_with_noise, dim=-1)  # (B, T)
 
-            # 统一计算 p 与 model_confidence，便于各模式复用
             p = F.softmax(logits, dim=-1)
             model_confidence = torch.squeeze(
                 torch.gather(p, dim=-1, index=torch.unsqueeze(x0, -1)), -1
-            )  # 形状 (B,L)，是当前预测 token 的置信度
+            ) 
             R = torch.rand((x0.shape[0], x0.shape[1]), device=x0.device)  # 随机项 U(0,1)
 
-            # Adaptive Remask 两种策略 + 兼容原有三种
+
             if remasking == "low_confidence":
-                # 纯置信度（等价于 α=0）
                 x0_p = model_confidence
 
             elif remasking == "random":
-                # 纯随机（等价于 α=1）
                 x0_p = R
 
             elif remasking == "rate":
-                # 保持你原来的 'rate' 模式：x0_p = (1-random_rate)*conf + random_rate*rand
                 x0_p = (1 - random_rate) * model_confidence + random_rate * R
 
             elif remasking == "adaptive":
-                # 固定 α = alpha0： x0_p = (1-α)*conf + α*rand
                 alpha = torch.clamp(torch.tensor(alpha0, device=x0.device, dtype=model_confidence.dtype), 0.0, 1.0)
                 x0_p = (1 - alpha) * model_confidence + alpha * R
 
             elif remasking == "adaptive_step":
-                # Step-aware 线性衰减： α_n = α_0 * (1 - (n-1)/(N-1))
                 if steps > 1:
-                    frac = 1.0 - (i / (steps - 1))  # i∈[0,steps-1], frac 从 1 线性到 0
+                    frac = 1.0 - (i / (steps - 1)) 
                 else:
                     frac = 1.0
                 alpha = torch.clamp(torch.tensor(alpha0 * frac, device=x0.device, dtype=model_confidence.dtype), 0.0, 1.0)
@@ -236,7 +217,7 @@ def generate(
     return x
 
 
-# -------------------- CLI --------------------
+
 def main():
     parser = argparse.ArgumentParser(description="MMaDA masked generation (with attention_bias; aligned with LLaDA-style decoding).")
 
@@ -353,7 +334,7 @@ def main():
             mask_id=mask_id,
             random_rate=args.random_rate,
             injection_step=args.injection_step,
-            attention_mask=attn_mask,  # ✅ 传入用于构造 pad-only attention_bias
+            attention_mask=attn_mask,
         )
 
         # Decode only the generated tail

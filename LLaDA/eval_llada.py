@@ -27,13 +27,12 @@ from transformers import (
     PreTrainedTokenizerFast,
 )
 
-from generate import generate as generate_orig         # 旧签名: generate(model, prompt, ...)
-from generate_alpha import generate as generate_alpha  # 新签名: generate(model, tokenizer, prompt, ...)
+from generate import generate as generate_orig        
+from generate_alpha import generate as generate_alpha 
 
 def _call_generate(model, tokenizer, input_ids, *, args):
     remasking = getattr(args, "remasking", "adaptive_step")
 
-    # 通用参数（两边都可能用到）
     kw_common = dict(
         steps=args.steps,
         gen_length=args.gen_length,
@@ -47,17 +46,14 @@ def _call_generate(model, tokenizer, input_ids, *, args):
     use_alpha = remasking in {"adaptive", "adaptive_step", "rate"}
 
     if use_alpha:
-        # 只有新版才加这些“扩散/自检”相关参数
         kw_alpha = dict(
             injection_step=getattr(args, "injection_step", None),
             random_rate=getattr(args, "random_rate", 0.0),
             alpha0=getattr(args, "alpha0", 0.9),
         )
-        # 去掉 None
         kw_alpha = {k: v for k, v in kw_alpha.items() if v is not None}
         return generate_alpha(model, tokenizer, input_ids, **kw_common, **kw_alpha)
     else:
-        # 旧版严禁带 alpha 专属 keyword
         return generate_orig(model, input_ids, **kw_common)
 
 
@@ -215,17 +211,12 @@ class LLaDAEvalHarness(LM):
         self.block_length = block_length
         self.remasking = remasking
 
-    # ---------------- lm-eval chat-template hooks ----------------
-    # 这些钩子是为了配合 --apply_chat_template / --fewshot_as_multiturn
-    # 参考官方 model_guide 与发行说明。:contentReference[oaicite:2]{index=2}
 
     @property
     def tokenizer_name(self) -> str:
-        # 用于 lm-eval 的缓存/识别：优先返回 HF 的 name_or_path
         return getattr(self.tokenizer, "name_or_path", self.tokenizer.__class__.__name__)
 
     def chat_template(self, chat_template: Union[bool, str] = False, **kwargs) -> str:
-        # True → 返回 tokenizer.chat_template，否则空字符串；也允许外部直接传字符串
         if isinstance(chat_template, str):
             return chat_template
         if chat_template:
@@ -241,12 +232,7 @@ class LLaDAEvalHarness(LM):
         tokenize: bool = False,
         **kwargs,
     ) -> str:
-        """
-        直接透传到 HF 的 tokenizer.apply_chat_template，确保兼容
-        add_generation_prompt/chat_template/tokenize 等关键字。:contentReference[oaicite:3]{index=3}
-        """
         if hasattr(self.tokenizer, "apply_chat_template"):
-            # 如果上层传入 chat_template=True，则用 tokenizer 自带模板
             if chat_template is True:
                 chat_template = getattr(self.tokenizer, "chat_template", None)
             return self.tokenizer.apply_chat_template(
@@ -255,7 +241,6 @@ class LLaDAEvalHarness(LM):
                 chat_template=chat_template,
                 tokenize=tokenize,
             )
-        # 没模板就退化为朴素拼接（尽量不走到这里）
         text = ""
         for m in chat_history:
             role = m.get("role", "user")
@@ -273,7 +258,6 @@ class LLaDAEvalHarness(LM):
     def world_size(self):
         return getattr(self, "_world_size", 1)
 
-    # --------------- Core diffusion LM APIs -----------------
 
     def _forward_process(self, batch, prompt_index):
         b, l = batch.shape
@@ -433,7 +417,7 @@ class LLaDAEvalHarness(LM):
                 self.model,
                 self.tokenizer,
                 prompt,
-                args=self,   # 直接把 self 传进去，里面会读 steps/gen_length/cfg 等属性
+                args=self,
             )
 
             generated_answer = self.tokenizer.decode(

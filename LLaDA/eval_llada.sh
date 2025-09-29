@@ -76,18 +76,15 @@ n214-176-214:114595:118172 [2] NCCL INFO comm 0xe48c0d0 rank 2 nranks 4 cudaDev 
 |---------|------:|-----------|-----:|------|---|-----:|---|-----:|
 |humaneval|      1|create_test|     0|pass@1|   |0.3171|±  |0.0364|
 
-# 1) 确保不离线
 unset HF_HUB_OFFLINE
 export HF_DATASETS_OFFLINE=0
 
-# 2) 固定缓存路径（可写）
 export HF_HOME=/opt/tiger/hf
 export HF_DATASETS_CACHE=/opt/tiger/hf/datasets
 
-# 3) 打开 datasets 的调试日志，方便看到失败的 URL
+
 export HF_DATASETS_VERBOSITY=debug
 
-# 4) 用 Python 脚本逐个配置下载，并显式信任远程代码
 python - <<'PY'
 from datasets import get_dataset_config_names, load_dataset
 names = get_dataset_config_names("hails/mmlu_no_train")

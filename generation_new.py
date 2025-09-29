@@ -182,7 +182,7 @@ def main():
     parser.add_argument(
         "--custom_cache_dir",
         type=str,
-        default="/root/data/lzr/cache/LLaDA-8B-Instruct",
+        default="GSAI-ML/LLaDA-8B-Instruct",
         help="Model cache directory.",
     )
     parser.add_argument("--steps", type=int, default=64, help="Total sampling steps.")
@@ -208,8 +208,8 @@ def main():
     parser.add_argument(
         "--input_path",
         type=str,
-        default="/root/data/lzr/dllm/datasets/advbench.csv",
-        help="Path to the input CSV/TSV file.",
+        default="analysis/datasets/advbench.json",
+        help="Path to the input CSV/TSV/json file.",
     )
     parser.add_argument(
         "--num_of_test",
@@ -266,7 +266,11 @@ def main():
     # output_json_path = f"sorry-result-step-{args.injection_step}.json"
     output_json_path = f"result_{args.model_name}_{status_tag}_{time.time()}_csv.json"
     print(f"Reading prompts from {input_path}...")
-    if input_path.endswith(".csv"):
+    if input_path.endswith(".json"):
+        with open(input_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        prompts = [item["prompt"] for item in data]
+    elif input_path.endswith(".csv"):
         df = pd.read_csv(input_path)
         prompts = df["prompt"].tolist()
     elif input_path.endswith(".tsv"):
