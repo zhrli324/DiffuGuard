@@ -9,7 +9,7 @@ git clone https://github.com/DreamLM/Dream
 git clone https://github.com/ZichenWen1/DIJA
 
 ROOT="/opt/tiger/sft_entity"
-HF_TOKEN="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"
+HF_TOKEN=""
 USE_SYMLINKS="True"   # Change to "False" to copy real files instead of using symlinks (uses more disk)
 
 MODELS=(
