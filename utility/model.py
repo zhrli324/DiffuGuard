@@ -294,7 +294,7 @@ class Deepseek_api:
 
 
 class CustomGPT:
-    def __init__(self, model_name, base_url="http://35.220.164.252:3888/v1", api_key="", temperature=1.0):
+    def __init__(self, model_name, base_url="", api_key="", temperature=1.0):
         self.model_name = model_name
         self.base_url = base_url
         self.api_key = api_key
@@ -352,9 +352,9 @@ class CustomGPT:
         return response
 
     def resp_parse(self, response) -> list:
-        if isinstance(response, dict):  # 处理 requests 返回的 JSON
+        if isinstance(response, dict): 
             return [choice['message']['content'].strip() for choice in response.get('choices', [])]
-        elif hasattr(response, 'choices'):  # 处理 OpenAI SDK 返回对象
+        elif hasattr(response, 'choices'): 
             return [choice.message.content.strip() for choice in response.choices]
         return []
 
