@@ -4,12 +4,6 @@ The official repo for our paper **DiffuGuard: How Intrinsic Safety is Lost and F
 
 ## Initial Setup
 
-Clone this repo
-
-```shell
-git clone https://github.com/niez233/DiffuGuard.git
-```
-
 ## Analysis
 
 The code for analyzing dLLM jailbreaking safety (Section 3) is in the `analysis/` folder.
